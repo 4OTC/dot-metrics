@@ -83,3 +83,8 @@ public class AppEventSource : EventSource {
 
 `DotMetrics` will pick up the latest value for the user-generated metrics and supply them to the metrics publisher.
 
+## Releases
+
+Packages are available on Nuget.
+
+[https://www.nuget.org/packages/FourOTC.DotMetrics](FourOTC.DotMetrics).
