@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>FourOTC.DotMetrics</PackageId>
+    <Version>1.0.0</Version>
+    <PackageTags>metrics monitoring observability eventpipe event-pipe</PackageTags>
+    <Description>
+      FourOTC DotMetrics exports dotnet runtime and application metrics to a time-series event sink.
+    </Description>
+  </PropertyGroup>
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <RuntimeIdentifiers>linux-x64</RuntimeIdentifiers>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="InfluxDB.Collector"/>
+    <PackageReference Include="InfluxDB.LineProtocol"/>
+    <PackageReference Include="Microsoft.Diagnostics.NETCore.Client"/>
+    <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent"/>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions"/>
+  </ItemGroup>
+
+</Project>
