@@ -87,4 +87,4 @@ public class AppEventSource : EventSource {
 
 Packages are available on Nuget.
 
-[https://www.nuget.org/packages/FourOTC.DotMetrics](FourOTC.DotMetrics).
+[FourOTC.DotMetrics](https://www.nuget.org/packages/FourOTC.DotMetrics).
