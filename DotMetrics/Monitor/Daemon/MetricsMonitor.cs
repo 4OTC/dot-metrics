@@ -74,7 +74,7 @@ namespace DotMetrics.Monitor.Daemon
                     EventLevel.Informational, subscriptionFlags),
             };
 
-            SystemRuntimeEventHandler systemRuntimeHandler = 
+            SystemRuntimeEventHandler systemRuntimeHandler =
                 new SystemRuntimeEventHandler(_monitoredProcess.Label, _metricsPublisher, _environmentConfiguration);
             EventPipeProvider provider = systemRuntimeHandler.GetProvider();
             _dynamicHandlers[provider.Name] = systemRuntimeHandler.HandleEvent;

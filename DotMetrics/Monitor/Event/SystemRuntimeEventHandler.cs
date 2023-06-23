@@ -40,8 +40,8 @@ namespace DotMetrics.Monitor.Event
         private readonly EnvironmentConfiguration _environmentConfiguration;
 
         public SystemRuntimeEventHandler(
-            string serviceName, 
-            IMetricsPublisher metricsPublisher, 
+            string serviceName,
+            IMetricsPublisher metricsPublisher,
             EnvironmentConfiguration environmentConfiguration = null)
         {
             _serviceName = serviceName;
