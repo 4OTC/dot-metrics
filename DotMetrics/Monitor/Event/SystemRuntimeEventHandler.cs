@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Tracing;
+using DotMetrics.Monitor.Configuration;
 using DotMetrics.Monitor.Publish;
 using Microsoft.Diagnostics.NETCore.Client;
 using Microsoft.Diagnostics.Tracing;
@@ -36,18 +37,23 @@ namespace DotMetrics.Monitor.Event
 
         private readonly string _serviceName;
         private readonly IMetricsPublisher _metricsPublisher;
+        private readonly EnvironmentConfiguration _environmentConfiguration;
 
-        public SystemRuntimeEventHandler(string serviceName, IMetricsPublisher metricsPublisher)
+        public SystemRuntimeEventHandler(
+            string serviceName, 
+            IMetricsPublisher metricsPublisher, 
+            EnvironmentConfiguration environmentConfiguration = null)
         {
             _serviceName = serviceName;
             _metricsPublisher = metricsPublisher;
+            _environmentConfiguration = environmentConfiguration ?? EnvironmentConfiguration.GetInstance();
         }
 
         public EventPipeProvider GetProvider()
         {
             var dictionary = new Dictionary<string, string>
             {
-                ["EventCounterIntervalSec"] = "5"
+                ["EventCounterIntervalSec"] = _environmentConfiguration.PollIntervalSeconds.ToString()
             };
             return new EventPipeProvider(SystemRuntimeProviderName, EventLevel.Verbose, 0xFFFFFFFF, dictionary);
         }

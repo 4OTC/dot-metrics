@@ -17,11 +17,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="InfluxDB.Collector"/>
-    <PackageReference Include="InfluxDB.LineProtocol"/>
-    <PackageReference Include="Microsoft.Diagnostics.NETCore.Client"/>
-    <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent"/>
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions"/>
+    <PackageReference Include="InfluxDB.Collector" />
+    <PackageReference Include="InfluxDB.LineProtocol" />
+    <PackageReference Include="Microsoft.Diagnostics.NETCore.Client" />
+    <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
   </ItemGroup>
 
 </Project>

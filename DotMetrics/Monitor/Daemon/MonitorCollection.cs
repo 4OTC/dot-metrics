@@ -16,6 +16,7 @@ namespace DotMetrics.Monitor.Daemon
         private readonly ILogger _applicationLogger;
         private readonly CancellationTokenSource _cancellationTokenSource;
         private readonly Thread[] _threads;
+        private readonly EnvironmentConfiguration _environmentConfiguration;
 
         public MonitorCollection(
             ProcessInfo[] monitoredProcesses,
@@ -23,7 +24,8 @@ namespace DotMetrics.Monitor.Daemon
             IMetricsPublisher metricsPublisher,
             IExceptionLogger exceptionLogger,
             ILogger applicationLogger,
-            CancellationTokenSource cancellationTokenSource)
+            CancellationTokenSource cancellationTokenSource,
+            EnvironmentConfiguration environmentConfiguration = null)
         {
             _monitoredProcesses = monitoredProcesses;
             _providerNames = providerNames;
@@ -32,6 +34,7 @@ namespace DotMetrics.Monitor.Daemon
             _applicationLogger = applicationLogger;
             _cancellationTokenSource = cancellationTokenSource;
             _threads = new Thread[monitoredProcesses.Length];
+            _environmentConfiguration = environmentConfiguration ?? EnvironmentConfiguration.GetInstance();
         }
 
         public void Run()
@@ -45,7 +48,8 @@ namespace DotMetrics.Monitor.Daemon
                     _metricsPublisher,
                     _exceptionLogger,
                     _applicationLogger,
-                    _cancellationTokenSource);
+                    _cancellationTokenSource,
+                    _environmentConfiguration);
                 Thread thread = new Thread(monitor.Run)
                 {
                     IsBackground = true,

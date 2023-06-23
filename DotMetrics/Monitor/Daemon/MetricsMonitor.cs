@@ -35,6 +35,7 @@ namespace DotMetrics.Monitor.Daemon
         private readonly Dictionary<string, TraceEventHandler> _dynamicHandlers = new();
         private readonly ILogger _applicationLogger;
         private readonly CancellationTokenSource _cancellationTokenSource;
+        private readonly EnvironmentConfiguration _environmentConfiguration;
 
         public MetricsMonitor(
             ProcessInfo monitoredProcess,
@@ -42,7 +43,8 @@ namespace DotMetrics.Monitor.Daemon
             IMetricsPublisher metricsPublisher,
             IExceptionLogger exceptionLogger,
             ILogger applicationLogger,
-            CancellationTokenSource cancellationTokenSource)
+            CancellationTokenSource cancellationTokenSource,
+            EnvironmentConfiguration environmentConfiguration = null)
         {
             _monitoredProcessId = monitoredProcess.Pid;
             _monitoredProcess = monitoredProcess;
@@ -55,6 +57,7 @@ namespace DotMetrics.Monitor.Daemon
             _eventHandlerByCode[(long)ClrTraceEventParser.Keywords.Exception] = ExceptionEventHandler;
             _eventHandlerByCode[(long)ClrTraceEventParser.Keywords.GC] = GcEventHandler;
             _garbageCollectionEventBuilder = new(monitoredProcess.Label, _metricsPublisher);
+            _environmentConfiguration = environmentConfiguration ?? EnvironmentConfiguration.GetInstance();
         }
 
         public void Run()
@@ -71,7 +74,8 @@ namespace DotMetrics.Monitor.Daemon
                     EventLevel.Informational, subscriptionFlags),
             };
 
-            SystemRuntimeEventHandler systemRuntimeHandler = new SystemRuntimeEventHandler(_monitoredProcess.Label, _metricsPublisher);
+            SystemRuntimeEventHandler systemRuntimeHandler = 
+                new SystemRuntimeEventHandler(_monitoredProcess.Label, _metricsPublisher, _environmentConfiguration);
             EventPipeProvider provider = systemRuntimeHandler.GetProvider();
             _dynamicHandlers[provider.Name] = systemRuntimeHandler.HandleEvent;
             providers.Add(provider);
@@ -82,7 +86,7 @@ namespace DotMetrics.Monitor.Daemon
                 {
                     providers.Add(new(providerName, EventLevel.Verbose, 0, new Dictionary<string, string>()
                     {
-                        {"EventCounterIntervalSec", "5"}
+                        {"EventCounterIntervalSec", _environmentConfiguration.PollIntervalSeconds.ToString()}
                     }));
                     _dynamicHandlers[providerName] = userSpecifiedEventHandler.HandleEvent;
                     _applicationLogger.LogInformation($"Added handler for provider {providerName}");
