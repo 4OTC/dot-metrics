@@ -7,6 +7,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotMetrics.Test", "DotMetri
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotMetrics", "DotMetrics\DotMetrics.csproj", "{B247AE90-726C-4A68-BB61-77671AB9B16B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotMetrics.Codec", "DotMetrics.Codec\DotMetrics.Codec.csproj", "{8E733D91-A6A0-450D-9945-DE689E2EB7D2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotMetrics.Codec.Test", "DotMetrics.Codec.Test\DotMetrics.Codec.Test.csproj", "{8DA92454-5566-4A7A-A2E6-5B0BBD1DD203}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +28,13 @@ Global
 		{B247AE90-726C-4A68-BB61-77671AB9B16B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B247AE90-726C-4A68-BB61-77671AB9B16B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B247AE90-726C-4A68-BB61-77671AB9B16B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E733D91-A6A0-450D-9945-DE689E2EB7D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E733D91-A6A0-450D-9945-DE689E2EB7D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E733D91-A6A0-450D-9945-DE689E2EB7D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E733D91-A6A0-450D-9945-DE689E2EB7D2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8DA92454-5566-4A7A-A2E6-5B0BBD1DD203}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8DA92454-5566-4A7A-A2E6-5B0BBD1DD203}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8DA92454-5566-4A7A-A2E6-5B0BBD1DD203}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8DA92454-5566-4A7A-A2E6-5B0BBD1DD203}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

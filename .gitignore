@@ -1,5 +1,3 @@
-DotMetrics.Test/bin/
-DotMetrics.Test/obj/
-DotMetrics/bin/
-DotMetrics/obj/
+*/bin/
+*/obj/
 .idea/
