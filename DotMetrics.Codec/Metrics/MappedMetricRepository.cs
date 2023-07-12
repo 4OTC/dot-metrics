@@ -16,7 +16,7 @@ public class MappedMetricRepository : IMetricRepository, IDisposable
     private const int VersionOffset = 0;
     private const int RecordCountOffset = VersionOffset + BitUtil.SIZE_OF_LONG;
     private const int SpinLockOffset = RecordCountOffset + BitUtil.SIZE_OF_LONG;
-    private const int RecordOffset = BitUtil.CACHE_LINE_LENGTH * 4; 
+    private const int RecordOffset = BitUtil.CACHE_LINE_LENGTH * 4;
     private const int RecordLength = 128;
     private const int LabelLength = RecordLength - (BitUtil.SIZE_OF_LONG + BitUtil.SIZE_OF_DOUBLE);
     private const int LabelValueOffset = 2;
@@ -78,10 +78,12 @@ public class MappedMetricRepository : IMetricRepository, IDisposable
         {
             throw new Exception("Label cannot be empty");
         }
+
         if (Encoding.UTF8.GetByteCount(identifier) > LabelValueByteLength)
         {
             throw new Exception($"Label is too long: {identifier}");
         }
+
         Encoding.UTF8.GetBytes(identifier, 0, identifier.Length, _labelBuffer, 0);
         _indexCalculator.Reset(new ReadOnlySpan<byte>(_labelBuffer, 0, identifier.Length));
         Read(_indexCalculator);
@@ -100,7 +102,7 @@ public class MappedMetricRepository : IMetricRepository, IDisposable
                 {
                     throw new Exception("Repository is full");
                 }
-                
+
                 _unsafeBuffer.PutIntVolatile(RecordCountOffset, currentRecordCount + 1);
                 recordIndex = currentRecordCount;
             }
@@ -115,8 +117,10 @@ public class MappedMetricRepository : IMetricRepository, IDisposable
         int recordOffset = RecordOffset + (recordIndex * RecordLength);
         _unsafeBuffer.PutBytes(recordOffset + LabelOffset, _labelBuffer, 0, _labelBuffer.Length);
         Thread.MemoryBarrier();
-        _unsafeBuffer.PutByte(recordOffset + MetricTypeOffset, (byte) CounterType.Simple);
-        return new MappedMetricCounter(new UnsafeBuffer(_unsafeBuffer.BufferPointer, recordOffset + LabelLength, MetricDataLength));
+        _unsafeBuffer.PutByte(recordOffset + MetricTypeOffset, (byte)CounterType.Simple);
+        return new MappedMetricCounter(
+            new UnsafeBuffer(_unsafeBuffer.BufferPointer, recordOffset + LabelLength, MetricDataLength),
+            DateTimeEpochMillisSupplier.Instance);
     }
 
     public void Read(IMetricValueReceiver metricValueReceiver)
@@ -130,11 +134,13 @@ public class MappedMetricRepository : IMetricRepository, IDisposable
             {
                 int metricNameLength = _tmpBuffer[LabelOffset];
                 ReadOnlySpan<byte> metricName = new ReadOnlySpan<byte>(_tmpBuffer, LabelValueOffset, metricNameLength);
-                MemoryMarshal.TryRead(new ReadOnlySpan<byte>(_tmpBuffer, RecordValueOffset, BitUtil.SIZE_OF_DOUBLE),
-                    out double value);
-                MemoryMarshal.TryRead(new ReadOnlySpan<byte>(_tmpBuffer, RecordTimestampOffset, BitUtil.SIZE_OF_LONG),
-                    out long updateTimeEpochMs);
-                metricValueReceiver.Receive(metricName, value, updateTimeEpochMs);
+                long updateTimeEpochMs = _unsafeBuffer.GetLongVolatile(offset + RecordTimestampOffset);
+                if (updateTimeEpochMs != 0 || metricValueReceiver is IndexCalculatorMetricValueReceiver)
+                {
+                    MemoryMarshal.TryRead(new ReadOnlySpan<byte>(_tmpBuffer, RecordValueOffset, BitUtil.SIZE_OF_DOUBLE),
+                        out double value);
+                    metricValueReceiver.Receive(metricName, value, updateTimeEpochMs);
+                }
             }
 
             offset += RecordLength;

@@ -22,6 +22,28 @@ public class MappedMetricRepositoryTest : IDisposable
     }
 
     [Fact]
+    public void ShouldUpdateMetricTimeOnEachPublication()
+    {
+        IMetricCounter counter = _repository.GetOrCreate(MetricOne);
+        counter.SetValue(11);
+        _repository.Read(_receiver);
+        long firstPublishTime = _receiver.CapturedMetrics[MetricOne].UpdateTimeEpochMs;
+        Thread.Sleep(1);
+        counter.SetValue(13);
+        _repository.Read(_receiver);
+        Assert.True(_receiver.CapturedMetrics[MetricOne].UpdateTimeEpochMs > firstPublishTime);
+    }
+
+    [Fact]
+    public void ShouldNotReportMetricsUntilValueWritten()
+    {
+        Assert.NotNull(_repository.GetOrCreate(MetricOne));
+        
+        _repository.Read(_receiver);
+        Assert.Empty(_receiver.CapturedMetrics);
+    }
+
+    [Fact]
     public void ShouldReOpen()
     {
         _repository.GetOrCreate(MetricOne).SetValue(17);
