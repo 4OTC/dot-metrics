@@ -12,17 +12,17 @@ namespace DotMetrics.Codec.Metrics;
 
 public class MappedMetricRepository : IMetricRepository, IDisposable
 {
-    private readonly uint _maxRecordCount;
     private const byte SchemaVersion = 1;
-    
     private const int VersionOffset = 0;
     private const int RecordCountOffset = VersionOffset + BitUtil.SIZE_OF_LONG;
     private const int SpinLockOffset = RecordCountOffset + BitUtil.SIZE_OF_LONG;
     private const int RecordOffset = BitUtil.CACHE_LINE_LENGTH * 4; 
     private const int RecordLength = 128;
     private const int LabelLength = RecordLength - (BitUtil.SIZE_OF_LONG + BitUtil.SIZE_OF_DOUBLE);
-    private const int LabelValueByteLength = LabelLength - 1;
-    private const int LabelValueOffset = 1;
+    private const int LabelValueOffset = 2;
+    private const int LabelValueByteLength = LabelLength - LabelValueOffset;
+    private const int LabelOffset = 1;
+    private const int MetricTypeOffset = 0;
     private const int ValueUnlocked = 0;
     private const int ValueLocked = 1;
     private const int MetricDataLength = 16;
@@ -33,6 +33,7 @@ public class MappedMetricRepository : IMetricRepository, IDisposable
     private readonly byte[] _tmpBuffer = new byte[RecordLength];
     private readonly byte[] _labelBuffer = new byte[RecordValueOffset];
     private readonly IndexCalculatorMetricValueReceiver _indexCalculator = new IndexCalculatorMetricValueReceiver();
+    private readonly uint _maxRecordCount;
     private readonly MappedByteBuffer _mappedByteBuffer;
     private readonly UnsafeBuffer _unsafeBuffer;
 
@@ -46,7 +47,9 @@ public class MappedMetricRepository : IMetricRepository, IDisposable
             FileInfo tmpFile = new FileInfo(Path.Combine(Path.GetTempPath(), tmpFilePath));
             using FileStream fileStream = File.Open(tmpFile.FullName, FileMode.Truncate);
             fileStream.SetLength(fileLength);
-            fileStream.Write(new byte[fileLength]);
+            byte[] initContents = new byte[fileLength];
+            initContents[VersionOffset] = SchemaVersion;
+            fileStream.Write(initContents);
             try
             {
                 File.Move(tmpFile.FullName, fileInfo.FullName);
@@ -62,6 +65,11 @@ public class MappedMetricRepository : IMetricRepository, IDisposable
             MemoryMappedFile.CreateFromFile(fileInfo.FullName, FileMode.OpenOrCreate, null, fileLength);
         _mappedByteBuffer = new MappedByteBuffer(memoryMappedFile);
         _unsafeBuffer = new UnsafeBuffer(_mappedByteBuffer);
+        byte encodedSchemaVersion = _unsafeBuffer.GetByte(VersionOffset);
+        if (encodedSchemaVersion != SchemaVersion)
+        {
+            throw new Exception($"Unexpected version: {encodedSchemaVersion}, expected: {SchemaVersion}");
+        }
     }
 
     public IMetricCounter GetOrCreate(string identifier)
@@ -103,11 +111,11 @@ public class MappedMetricRepository : IMetricRepository, IDisposable
         }
 
         _labelBuffer[0] = (byte)identifier.Length;
-        Encoding.UTF8.GetBytes(identifier, 0, identifier.Length, _labelBuffer, LabelValueOffset);
+        Encoding.UTF8.GetBytes(identifier, 0, identifier.Length, _labelBuffer, 1);
         int recordOffset = RecordOffset + (recordIndex * RecordLength);
-        _unsafeBuffer.PutBytes(recordOffset + LabelValueOffset, _labelBuffer, LabelValueOffset, _labelBuffer.Length - 1);
+        _unsafeBuffer.PutBytes(recordOffset + LabelOffset, _labelBuffer, 0, _labelBuffer.Length);
         Thread.MemoryBarrier();
-        _unsafeBuffer.PutByte(recordOffset, _labelBuffer[0]);
+        _unsafeBuffer.PutByte(recordOffset + MetricTypeOffset, (byte) CounterType.Simple);
         return new MappedMetricCounter(new UnsafeBuffer(_unsafeBuffer.BufferPointer, recordOffset + LabelLength, MetricDataLength));
     }
 
@@ -120,7 +128,7 @@ public class MappedMetricRepository : IMetricRepository, IDisposable
             _unsafeBuffer.GetBytes(offset, _tmpBuffer);
             if (_tmpBuffer[0] != 0)
             {
-                int metricNameLength = _tmpBuffer[0];
+                int metricNameLength = _tmpBuffer[LabelOffset];
                 ReadOnlySpan<byte> metricName = new ReadOnlySpan<byte>(_tmpBuffer, LabelValueOffset, metricNameLength);
                 MemoryMarshal.TryRead(new ReadOnlySpan<byte>(_tmpBuffer, RecordValueOffset, BitUtil.SIZE_OF_DOUBLE),
                     out double value);

@@ -22,6 +22,19 @@ public class MappedMetricRepositoryTest : IDisposable
     }
 
     [Fact]
+    public void ShouldReOpen()
+    {
+        _repository.GetOrCreate(MetricOne).SetValue(17);
+        _repository.GetOrCreate(MetricTwo).SetValue(37);
+        
+        _repository.Dispose();
+        MappedMetricRepository repository = new MappedMetricRepository(_mappedFileInfo, RecordCount);
+        
+        VerifyMetricValueInRepository(17, MetricOne, repository);
+        VerifyMetricValueInRepository(37, MetricTwo, repository);
+    }
+
+    [Fact]
     public void ShouldGrowBackingFileWhenRecreated()
     {
         const int increasedRecordCount = 2 * RecordCount;
