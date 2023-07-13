@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <PackageId>FourOTC.DotMetrics</PackageId>
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
     <PackageTags>metrics monitoring observability eventpipe event-pipe</PackageTags>
     <Description>
       FourOTC DotMetrics exports dotnet runtime and application metrics to a time-series event sink.
