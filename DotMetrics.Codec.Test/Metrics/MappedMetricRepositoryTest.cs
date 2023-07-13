@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.Text;
 using DotMetrics.Codec.Metrics;
 using Xunit;
@@ -22,6 +23,35 @@ public class MappedMetricRepositoryTest : IDisposable
     }
 
     [Fact]
+    public void ShouldNotSegFaultIfUnderlyingRepositoryIsDisposed()
+    {
+        IMetricCounter metricCounter = _repository.GetOrCreate(MetricOne);
+        
+        metricCounter.SetValue(17);
+        
+        _repository.Dispose();
+
+        metricCounter.SetValue(23);
+    }
+
+    [Fact]
+    public void ShouldCreateInDevShmOnLinux()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            FileInfo fileInfo = new FileInfo($"/dev/shm/{Guid.NewGuid().ToString()}");
+            try
+            {
+                MappedMetricRepository repo = new MappedMetricRepository(fileInfo, 16);
+            }
+            finally
+            {
+                File.Delete(fileInfo.FullName);
+            }
+        }
+    }
+
+    [Fact]
     public void ShouldUpdateMetricTimeOnEachPublication()
     {
         IMetricCounter counter = _repository.GetOrCreate(MetricOne);
@@ -38,7 +68,7 @@ public class MappedMetricRepositoryTest : IDisposable
     public void ShouldNotReportMetricsUntilValueWritten()
     {
         Assert.NotNull(_repository.GetOrCreate(MetricOne));
-        
+
         _repository.Read(_receiver);
         Assert.Empty(_receiver.CapturedMetrics);
     }
@@ -48,10 +78,10 @@ public class MappedMetricRepositoryTest : IDisposable
     {
         _repository.GetOrCreate(MetricOne).SetValue(17);
         _repository.GetOrCreate(MetricTwo).SetValue(37);
-        
+
         _repository.Dispose();
         MappedMetricRepository repository = new MappedMetricRepository(_mappedFileInfo, RecordCount);
-        
+
         VerifyMetricValueInRepository(17, MetricOne, repository);
         VerifyMetricValueInRepository(37, MetricTwo, repository);
     }
@@ -61,7 +91,7 @@ public class MappedMetricRepositoryTest : IDisposable
     {
         const int increasedRecordCount = 2 * RecordCount;
         MappedMetricRepository repository = new MappedMetricRepository(_mappedFileInfo, increasedRecordCount);
-        
+
         VerifyRepositoryThrowsExceptionWhenFull(increasedRecordCount, repository);
     }
 

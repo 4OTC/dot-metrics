@@ -36,6 +36,8 @@ public class MappedMetricRepository : IMetricRepository, IDisposable
     private readonly uint _maxRecordCount;
     private readonly MappedByteBuffer _mappedByteBuffer;
     private readonly UnsafeBuffer _unsafeBuffer;
+    private readonly Func<bool> _repositoryIsDisposed;
+    private bool _isDisposed;
 
     public MappedMetricRepository(FileSystemInfo fileInfo, uint maxRecordCount)
     {
@@ -50,6 +52,8 @@ public class MappedMetricRepository : IMetricRepository, IDisposable
             byte[] initContents = new byte[fileLength];
             initContents[VersionOffset] = SchemaVersion;
             fileStream.Write(initContents);
+            fileStream.Flush();
+            fileStream.Close();
             try
             {
                 File.Move(tmpFile.FullName, fileInfo.FullName);
@@ -62,7 +66,7 @@ public class MappedMetricRepository : IMetricRepository, IDisposable
         }
 
         MemoryMappedFile memoryMappedFile =
-            MemoryMappedFile.CreateFromFile(fileInfo.FullName, FileMode.OpenOrCreate, null, fileLength);
+            MemoryMappedFile.CreateFromFile(fileInfo.FullName, FileMode.Open, null, fileLength);
         _mappedByteBuffer = new MappedByteBuffer(memoryMappedFile);
         _unsafeBuffer = new UnsafeBuffer(_mappedByteBuffer);
         byte encodedSchemaVersion = _unsafeBuffer.GetByte(VersionOffset);
@@ -70,6 +74,8 @@ public class MappedMetricRepository : IMetricRepository, IDisposable
         {
             throw new Exception($"Unexpected version: {encodedSchemaVersion}, expected: {SchemaVersion}");
         }
+
+        _repositoryIsDisposed = IsDisposed;
     }
 
     public IMetricCounter GetOrCreate(string identifier)
@@ -120,7 +126,7 @@ public class MappedMetricRepository : IMetricRepository, IDisposable
         _unsafeBuffer.PutByte(recordOffset + MetricTypeOffset, (byte)CounterType.Simple);
         return new MappedMetricCounter(
             new UnsafeBuffer(_unsafeBuffer.BufferPointer, recordOffset + LabelLength, MetricDataLength),
-            DateTimeEpochMillisSupplier.Instance);
+            DateTimeEpochMillisSupplier.Instance, _repositoryIsDisposed);
     }
 
     public void Read(IMetricValueReceiver metricValueReceiver)
@@ -149,8 +155,15 @@ public class MappedMetricRepository : IMetricRepository, IDisposable
 
     public void Dispose()
     {
+        Volatile.Write(ref _isDisposed, true);
+        Thread.Sleep(1);
         _unsafeBuffer.Dispose();
         _mappedByteBuffer.Dispose();
+    }
+
+    private bool IsDisposed()
+    {
+        return Volatile.Read(ref _isDisposed);
     }
 
     private void ReleaseSpinLock()

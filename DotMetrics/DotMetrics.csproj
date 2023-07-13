@@ -17,6 +17,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="FourOTC.DotMetrics.Codec" />
     <PackageReference Include="InfluxDB.Collector" />
     <PackageReference Include="InfluxDB.LineProtocol" />
     <PackageReference Include="Microsoft.Diagnostics.NETCore.Client" />
