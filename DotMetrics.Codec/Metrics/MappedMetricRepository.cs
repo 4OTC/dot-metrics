@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Runtime.InteropServices;
@@ -33,11 +34,10 @@ public class MappedMetricRepository : IMetricRepository, IDisposable
     private readonly byte[] _tmpBuffer = new byte[RecordLength];
     private readonly byte[] _labelBuffer = new byte[RecordValueOffset];
     private readonly IndexCalculatorMetricValueReceiver _indexCalculator = new IndexCalculatorMetricValueReceiver();
+    private readonly List<MappedMetricCounter> _createdCounters = new();
     private readonly uint _maxRecordCount;
     private readonly MappedByteBuffer _mappedByteBuffer;
     private readonly UnsafeBuffer _unsafeBuffer;
-    private readonly Func<bool> _repositoryIsDisposed;
-    private bool _isDisposed;
 
     public MappedMetricRepository(FileSystemInfo fileInfo, uint maxRecordCount)
     {
@@ -74,8 +74,6 @@ public class MappedMetricRepository : IMetricRepository, IDisposable
         {
             throw new Exception($"Unexpected version: {encodedSchemaVersion}, expected: {SchemaVersion}");
         }
-
-        _repositoryIsDisposed = IsDisposed;
     }
 
     public IMetricCounter GetOrCreate(string identifier)
@@ -124,9 +122,11 @@ public class MappedMetricRepository : IMetricRepository, IDisposable
         _unsafeBuffer.PutBytes(recordOffset + LabelOffset, _labelBuffer, 0, _labelBuffer.Length);
         Thread.MemoryBarrier();
         _unsafeBuffer.PutByte(recordOffset + MetricTypeOffset, (byte)CounterType.Simple);
-        return new MappedMetricCounter(
+        MappedMetricCounter metricCounter = new MappedMetricCounter(
             new UnsafeBuffer(_unsafeBuffer.BufferPointer, recordOffset + LabelLength, MetricDataLength),
-            DateTimeEpochMillisSupplier.Instance, _repositoryIsDisposed);
+            DateTimeEpochMillisSupplier.Instance);
+        _createdCounters.Add(metricCounter);
+        return metricCounter;
     }
 
     public void Read(IMetricValueReceiver metricValueReceiver)
@@ -155,15 +155,12 @@ public class MappedMetricRepository : IMetricRepository, IDisposable
 
     public void Dispose()
     {
-        Volatile.Write(ref _isDisposed, true);
-        Thread.Sleep(1);
+        foreach (MappedMetricCounter metricCounter in _createdCounters)
+        {
+            metricCounter.Close();
+        }
         _unsafeBuffer.Dispose();
         _mappedByteBuffer.Dispose();
-    }
-
-    private bool IsDisposed()
-    {
-        return Volatile.Read(ref _isDisposed);
     }
 
     private void ReleaseSpinLock()
