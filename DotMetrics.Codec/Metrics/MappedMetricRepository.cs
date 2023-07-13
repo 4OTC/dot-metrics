@@ -43,8 +43,13 @@ public class MappedMetricRepository : IMetricRepository, IDisposable
     {
         _maxRecordCount = maxRecordCount;
         long fileLength = GetFileLength(maxRecordCount);
-        if (!File.Exists(fileInfo.FullName))
+        bool fileDoesNotExist = !File.Exists(fileInfo.FullName);
+        if (fileDoesNotExist)
         {
+            if (maxRecordCount == 0)
+            {
+                throw new Exception("Cannot create repository without specifying record count");
+            }
             string tmpFilePath = Path.GetTempFileName();
             FileInfo tmpFile = new FileInfo(Path.Combine(Path.GetTempPath(), tmpFilePath));
             using FileStream fileStream = File.Open(tmpFile.FullName, FileMode.Truncate);
@@ -63,6 +68,10 @@ public class MappedMetricRepository : IMetricRepository, IDisposable
                 File.Delete(tmpFile.FullName);
                 // ignore, another process or thread already created the file
             }
+        }
+        else if (maxRecordCount == 0)
+        {
+            fileLength = new FileInfo(fileInfo.FullName).Length;
         }
 
         MemoryMappedFile memoryMappedFile =

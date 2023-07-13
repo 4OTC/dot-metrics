@@ -23,6 +23,14 @@ public class MappedMetricRepositoryTest : IDisposable
     }
 
     [Fact]
+    public void ShouldOpenFileInReadOnlyModeWhenRecordCountParameterIsZero()
+    {
+        MappedMetricRepository readOnly = new MappedMetricRepository(_mappedFileInfo, 0);
+        _repository.GetOrCreate(MetricOne).SetValue(17);
+        VerifyMetricValueInRepository(17, MetricOne, readOnly);
+    }
+
+    [Fact]
     public void ShouldNotSegFaultIfUnderlyingRepositoryIsDisposed()
     {
         IMetricCounter metricCounter = _repository.GetOrCreate(MetricOne);
