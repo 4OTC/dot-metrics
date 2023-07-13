@@ -88,6 +88,7 @@ public class MappedMetricRepository : IMetricRepository, IDisposable
             throw new Exception($"Label is too long: {identifier}");
         }
 
+        Array.Clear(_labelBuffer);
         Encoding.UTF8.GetBytes(identifier, 0, identifier.Length, _labelBuffer, 0);
         _indexCalculator.Reset(new ReadOnlySpan<byte>(_labelBuffer, 0, identifier.Length));
         Read(_indexCalculator);

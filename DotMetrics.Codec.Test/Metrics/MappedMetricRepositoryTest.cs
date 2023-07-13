@@ -35,6 +35,15 @@ public class MappedMetricRepositoryTest : IDisposable
     }
 
     [Fact]
+    public void ShouldNotCorruptShorterMetricLabel()
+    {
+        string shortLabel = "abc";
+        Assert.NotNull(_repository.GetOrCreate(MetricOne));
+        _repository.GetOrCreate(shortLabel).SetValue(17); 
+        VerifyMetricValue(17, shortLabel);
+    }
+
+    [Fact]
     public void ShouldCreateInDevShmOnLinux()
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
