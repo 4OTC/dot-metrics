@@ -27,7 +27,7 @@ public class MonitoringDaemon
         _logger = logger;
     }
 
-    public async Task RunAsync()
+    public async Task Run()
     {
         _logger.LogInformation("Starting monitoring daemon");
         while (!_cancellationToken.IsCancellationRequested)
@@ -40,7 +40,7 @@ public class MonitoringDaemon
                 {
                     string alertMessage = $"{Environment.MachineName}/{EnvironmentName}: {alertRule.GetAlertMessage()}";
                     _logger.LogInformation($"Sending alert: {alertMessage}");
-                    await _alertSender.SendAsync(alertMessage);
+                    await _alertSender.Send(alertMessage);
                 }
             }
         }
