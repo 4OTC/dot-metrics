@@ -34,9 +34,9 @@ public class MappedMetricRepositoryTest : IDisposable
     public void ShouldNotSegFaultIfUnderlyingRepositoryIsDisposed()
     {
         IMetricCounter metricCounter = _repository.GetOrCreate(MetricOne);
-        
+
         metricCounter.SetValue(17);
-        
+
         _repository.Dispose();
 
         metricCounter.SetValue(23);
@@ -47,7 +47,7 @@ public class MappedMetricRepositoryTest : IDisposable
     {
         string shortLabel = "abc";
         Assert.NotNull(_repository.GetOrCreate(MetricOne));
-        _repository.GetOrCreate(shortLabel).SetValue(17); 
+        _repository.GetOrCreate(shortLabel).SetValue(17);
         VerifyMetricValue(17, shortLabel);
     }
 

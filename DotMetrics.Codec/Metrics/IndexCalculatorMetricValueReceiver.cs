@@ -18,10 +18,10 @@ public class IndexCalculatorMetricValueReceiver : IMetricValueReceiver
         requiredKey.CopyTo(_requiredKey);
         _requiredKeyLength = requiredKey.Length;
     }
-    
+
     public void Receive(ReadOnlySpan<byte> key, double value, long updateTimeEpochMs)
     {
-        if (MatchedIndex == NotFound && 
+        if (MatchedIndex == NotFound &&
             key.SequenceEqual(new ReadOnlySpan<byte>(_requiredKey, 0, _requiredKeyLength)))
         {
             MatchedIndex = _currentIndex;

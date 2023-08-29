@@ -30,14 +30,14 @@ public class MappedMetricCounter : IMetricCounter
 
         _buffer.PutLongOrdered(BitUtil.SIZE_OF_DOUBLE, 0);
         MemoryMarshal.TryWrite(_valueBuffer, ref value);
-        
+
         if (IsDisposed())
         {
             return;
         }
 
         _buffer.PutBytes(0, _valueBuffer);
-        
+
         if (IsDisposed())
         {
             return;

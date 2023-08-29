@@ -12,7 +12,7 @@ public class MetricPublisherMetricValueReceiver : IMetricValueReceiver
     private readonly string _providerName;
 
     public MetricPublisherMetricValueReceiver(
-        IMetricsPublisher metricsPublisher, 
+        IMetricsPublisher metricsPublisher,
         string serviceName,
         string providerName)
     {

@@ -9,7 +9,7 @@ public class DateTimeEpochMillisSupplier : IEpochMillisSupplier
     private DateTimeEpochMillisSupplier()
     {
     }
-    
+
     public long EpochMs()
     {
         return (long)(DateTime.UtcNow - DateTime.UnixEpoch).TotalMilliseconds;

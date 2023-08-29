@@ -39,7 +39,7 @@ public class MetricRepositoryPoller
             }
             catch (Exception e)
             {
-                _applicationLogger.LogError($"Failed to read from repository: {e}"); 
+                _applicationLogger.LogError($"Failed to read from repository: {e}");
             }
         }
     }
