@@ -4,5 +4,5 @@ namespace DotMetrics.Monitor.Alerting;
 
 public interface IAlertSender
 {
-    Task Send(string alertMessage);
+    Task SendAsync(string alertMessage);
 }
