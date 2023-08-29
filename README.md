@@ -2,6 +2,8 @@
 
 A library containing utilities for collecting and publishing metrics using the `Dotnet CLR` `EventPipe` mechanism.
 
+[![.NET](https://github.com/4OTC/dot-metrics/actions/workflows/dotnet.yml/badge.svg)](https://github.com/4OTC/dot-metrics/actions/workflows/dotnet.yml)
+
 ## Usage
 
 `DotMetrics` is not opinionated about how it should be run, rather this is a concern of a wrapper application, which needs to be supplied by the user.
