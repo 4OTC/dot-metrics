@@ -1,6 +1,6 @@
 namespace DotMetrics.Monitor.Logging
 {
-    public interface CountedExceptionListener
+    public interface ICountedExceptionListener
     {
 
     }

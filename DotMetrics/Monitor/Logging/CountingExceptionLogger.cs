@@ -41,7 +41,7 @@ namespace DotMetrics.Monitor.Logging
             }
         }
 
-        public void Report(CountedExceptionListener exceptionListener)
+        public void Report(ICountedExceptionListener exceptionListener)
         {
 
         }
